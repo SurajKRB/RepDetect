@@ -15,7 +15,6 @@
  */
 
 package com.example.poseexercise.posedetector.classification;
-
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -26,6 +25,8 @@ import com.example.poseexercise.data.PostureResult;
 import com.google.common.base.Preconditions;
 import com.google.mlkit.vision.pose.Pose;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -40,44 +41,26 @@ import java.util.Objects;
 public class PoseClassifierProcessor {
   private static final String TAG = "PoseClassifierProcessor";
 
-  //private static final String POSE_SAMPLES_FILE = "pose/fitness_pose_samples.csv";
-  private static final String POSE_SAMPLES_FILE = "pose/fitness_poses_csvs_out_v03.csv";
- 
+    //private static final String POSE_SAMPLES_FILE = "pose/fitness_pose_samples.csv";
+    private static final String POSE_SAMPLES_FILE = "pose/fitness_poses_csvs_out_v03.csv";
 
-  // Specify classes for which we want rep counting.
-  // These are the labels in the given {@code POSE_SAMPLES_FILE}. You can set your own class labels
-  // for your pose samples.
-
-  // The class name for the pushups
-  private static final String PUSHUPS_CLASS = "pushups_down";
+    // The class name for the pushups
+    private static final String PUSHUPS_CLASS = "pushups_down";
 
 
-  // The class name for squat
+    // The class name for squat
     private static final String SQUATS_CLASS = "squats";
 
-  //class name for lunges
-  private static final String LUNGES_CLASS = "lunges";
+    //class name for lunges
+    private static final String LUNGES_CLASS = "lunges";
 
- // The class name for chestpress
-  private static final String CHESTPRESS_DOWN_CLASS = "chestpress_down";
 
-  // The class name for the situp
-  private static final String SITUP_UP_CLASS = "situp_up";
+    // The class name for the situp
+    private static final String SITUP_UP_CLASS = "situp_up";
 
-  // The class name for the shoulderpress
-  private static final String SHOULDERPRESS_DOWN_CLASS = "shoulderpress_down";
-
-  private static final String SHOULDERPRESS_UP_CLASS = "shoulderpress_up";
-
-  // The class name for the deadlift
-  private static final String DEADLIFT_UP_CLASS = "deadlift_up";
-
-  private static final String DEADLIFT_DOWN_CLASS = "deadlift_down";
-
-  private static final String[] POSE_CLASSES = {
-    PUSHUPS_CLASS, SQUATS_CLASS, LUNGES_CLASS, CHESTPRESS_DOWN_CLASS, SITUP_UP_CLASS, SHOULDERPRESS_DOWN_CLASS, SHOULDERPRESS_UP_CLASS, DEADLIFT_UP_CLASS, DEADLIFT_DOWN_CLASS
-
-  };
+    private static final String[] POSE_CLASSES = {
+            PUSHUPS_CLASS, SQUATS_CLASS, LUNGES_CLASS, SITUP_UP_CLASS,
+    };
 
   private final boolean isStreamMode;
 
@@ -122,6 +105,30 @@ public class PoseClassifierProcessor {
       }
     }
   }
+
+  private void readFileAndAppendToFile(Context context) {
+      String inputFile = "/pose/lunges.csv";
+      String outputFile = "/data/data/" + context.getPackageName() + "combine.csv";
+      try {
+          BufferedReader reader = new BufferedReader(
+                  new InputStreamReader(context.getAssets().open(inputFile)));
+
+          BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+          while(reader.readLine()!= null) {
+                writer.write(reader.readLine());
+                writer.newLine();
+          }
+          writer.close();
+          reader.close();
+
+      } catch (Exception e) {
+          Log.e(TAG, "Error when reading and writing to file.\n" + e);
+      }
+
+
+  }
+
+
 
   /**
    * Given a new {@link Pose} input, returns a list of formatted {@link String}s with Pose
