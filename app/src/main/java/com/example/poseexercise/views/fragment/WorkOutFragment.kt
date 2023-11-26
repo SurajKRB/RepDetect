@@ -39,6 +39,7 @@ import com.example.poseexercise.R
 import com.example.poseexercise.adapters.WorkoutAdapter
 import com.example.poseexercise.data.plan.ExerciseLog
 import com.example.poseexercise.data.plan.ExercisePlan
+import com.example.poseexercise.data.plan.Plan
 import com.example.poseexercise.data.results.WorkoutResult
 import com.example.poseexercise.posedetector.PoseDetectorProcessor
 import com.example.poseexercise.util.MyApplication
@@ -101,6 +102,7 @@ class WorkOutFragment : Fragment() {
     private lateinit var loadingTV: TextView
     private lateinit var loadProgress: ProgressBar
 
+    private var notCompletedExercise: List<Plan>? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -275,7 +277,6 @@ class WorkOutFragment : Fragment() {
 
         cameraViewModel.processCameraProvider.observe(viewLifecycleOwner) { provider: ProcessCameraProvider? ->
             cameraProvider = provider
-            bindAllCameraUseCases()
         }
 
         cameraFlipFAB.setOnClickListener {
@@ -294,7 +295,10 @@ class WorkOutFragment : Fragment() {
         lifecycleScope.launch (Dispatchers.IO) {
 
             // get not completed exercise from database using coroutine
-            val notCompletedExercise = withContext(Dispatchers.IO) { homeViewModel.getNotCompletePlans(today)}
+            notCompletedExercise = withContext(Dispatchers.IO) { homeViewModel.getNotCompletePlans(today)}
+            withContext(Dispatchers.Main) {
+                notCompletedExercise?.let { bindAllCameraUseCases(it) } ?: bindAllCameraUseCases(emptyList())
+            }
 
             notCompletedExercise?.forEach {item ->
                 val exercisePlan = ExercisePlan(databaseNameToClassification(item.exercise), item.repeatCount)
@@ -439,10 +443,10 @@ class WorkOutFragment : Fragment() {
     }
 
 
-    private fun bindAllCameraUseCases() {
+    private fun bindAllCameraUseCases(notCompletedPlan: List<Plan>) {
         bindPreviewUseCase()
         cameraViewModel.triggerClassification.observe(viewLifecycleOwner) { pressed ->
-            bindAnalysisUseCase(pressed)
+            bindAnalysisUseCase(pressed,notCompletedPlan)
         }
     }
 
@@ -474,7 +478,7 @@ class WorkOutFragment : Fragment() {
     /**
      * bind analysis use case
      */
-    private fun bindAnalysisUseCase(runClassification: Boolean) {
+    private fun bindAnalysisUseCase(runClassification: Boolean, notCompletedPlan: List<Plan>) {
         if (cameraProvider == null) {
             return
         }
@@ -509,7 +513,8 @@ class WorkOutFragment : Fragment() {
                         rescaleZ,
                         runClassification,
                         true,
-                        cameraViewModel
+                        cameraViewModel,
+                        notCompletedPlan
                     )
                 }
 
@@ -635,7 +640,7 @@ class WorkOutFragment : Fragment() {
                 Log.d(TAG, "Set facing to $newLensFacing")
                 lensFacing = newLensFacing
                 cameraSelector = newCameraSelector
-                bindAllCameraUseCases()
+                bindAllCameraUseCases(notCompletedExercise ?: emptyList())
                 return
             }
         } catch (e: CameraInfoUnavailableException) {
