@@ -72,6 +72,7 @@ class PoseDetectorProcessor(
     Log.d("PoseDetectorProcessor", "notCompletedExercise: $notCompletedExercise")
     if(notCompletedExercise.isNotEmpty()) {
       exercisesToDetect = notCompletedExercise.map {plan -> plan.exercise}
+      Log.d("PoseDetector", "plan is $exercisesToDetect")
     }
   }
 
@@ -93,7 +94,8 @@ class PoseDetectorProcessor(
             poseClassifierProcessor =
               PoseClassifierProcessor(
                 context,
-                isStreamMode
+                isStreamMode,
+                exercisesToDetect
               )
           }
           classificationResult = poseClassifierProcessor!!.getPoseResult(pose)
@@ -116,7 +118,8 @@ class PoseDetectorProcessor(
             poseClassifierProcessor =
               PoseClassifierProcessor(
                 context,
-                isStreamMode
+                isStreamMode,
+                exercisesToDetect
               )
           }
           classificationResult = poseClassifierProcessor!!.getPoseResult(pose)

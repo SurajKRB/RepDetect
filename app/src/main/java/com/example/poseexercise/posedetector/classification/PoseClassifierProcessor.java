@@ -22,10 +22,12 @@ import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.WorkerThread;
 import com.example.poseexercise.data.PostureResult;
+import com.example.poseexercise.util.MyUtils;
 import com.google.common.base.Preconditions;
 import com.google.mlkit.vision.pose.Pose;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,7 +44,7 @@ public class PoseClassifierProcessor {
   private static final String TAG = "PoseClassifierProcessor";
 
     //private static final String POSE_SAMPLES_FILE = "pose/fitness_pose_samples.csv";
-    private static final String POSE_SAMPLES_FILE = "pose/fitness_poses_csvs_out_v03.csv";
+    private static final String POSE_SAMPLES_FILE = "data/data/com.example.poseexercise/files/combine.csv";
 
     // The class name for the pushups
     private static final String PUSHUPS_CLASS = "pushups_down";
@@ -70,22 +72,31 @@ public class PoseClassifierProcessor {
 
   private final Map<String,PostureResult> postureResults = new HashMap<>();
 
+  private final List<String> poseToDetect = new ArrayList<>();
+
   @WorkerThread
-  public PoseClassifierProcessor(Context context, boolean isStreamMode) {
+  public PoseClassifierProcessor(Context context, boolean isStreamMode, List<String> plan) {
     Preconditions.checkState(Looper.myLooper() != Looper.getMainLooper());
     this.isStreamMode = isStreamMode;
     if (isStreamMode) {
       emaSmoothing = new EMASmoothing();
       repCounters = new ArrayList<>();
     }
-    loadPoseSamples(context);
+
+    if (plan != null) {
+      for(int i = 0; i < plan.size(); i++) {
+        String modifyPoseName = MyUtils.Companion.databaseNameToClassification(plan.get(i));
+        poseToDetect.add(modifyPoseName);
+        readFileAndAppendToFile(context, "pose/" + modifyPoseName + ".csv", i == 0 );
+      }
+      loadPoseSamples(context);
+    }
   }
 
   private void loadPoseSamples(Context context) {
     List<PoseSample> poseSamples = new ArrayList<>();
     try {
-      BufferedReader reader = new BufferedReader(
-          new InputStreamReader(context.getAssets().open(POSE_SAMPLES_FILE)));
+      BufferedReader reader = new BufferedReader(new FileReader("data/data/" + context.getPackageName() + "/files/combine.csv"));
       String csvLine = reader.readLine();
       while (csvLine != null) {
         // If line is not a valid {@link PoseSample}, we'll get null and skip adding to the list.
@@ -100,35 +111,35 @@ public class PoseClassifierProcessor {
     }
     poseClassifier = new PoseClassifier(poseSamples);
     if (isStreamMode) {
-      for (String className : POSE_CLASSES) {
+      for (String className : poseToDetect) {
         repCounters.add(new RepetitionCounter(className));
       }
     }
   }
 
-  private void readFileAndAppendToFile(Context context) {
-      String inputFile = "/pose/lunges.csv";
-      String outputFile = "/data/data/" + context.getPackageName() + "combine.csv";
+  private void readFileAndAppendToFile(Context context, String inputFile, boolean runFirst) {
+      String outputFile = "data/data/" + context.getPackageName() + "/files/combine.csv";
       try {
+          // buffered reader for input file
           BufferedReader reader = new BufferedReader(
                   new InputStreamReader(context.getAssets().open(inputFile)));
 
-          BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
-          while(reader.readLine()!= null) {
-                writer.write(reader.readLine());
-                writer.newLine();
+          // check whether the output file is firstly modified.
+          // If yes -> overwrite data in file, otherwise append data to file
+          BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, !runFirst));
+
+          String line;
+          while((line = reader.readLine()) != null) {
+                writer.write(line + "\n");
           }
+          Log.d("PoseClassifier", "reading and writing completed");
           writer.close();
           reader.close();
 
       } catch (Exception e) {
           Log.e(TAG, "Error when reading and writing to file.\n" + e);
       }
-
-
   }
-
-
 
   /**
    * Given a new {@link Pose} input, returns a list of formatted {@link String}s with Pose
