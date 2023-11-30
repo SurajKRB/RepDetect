@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,11 +39,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.poseexercise.R
 import com.example.poseexercise.adapters.ExercisePagerAdapter
-import com.example.poseexercise.views.fragment.preference.PreferenceUtils
 import com.example.poseexercise.adapters.WorkoutAdapter
 import com.example.poseexercise.data.plan.ExerciseLog
 import com.example.poseexercise.data.plan.ExercisePlan
-import com.example.poseexercise.data.plan.Plan
 import com.example.poseexercise.data.results.WorkoutResult
 import com.example.poseexercise.posedetector.PoseDetectorProcessor
 import com.example.poseexercise.util.MyApplication
@@ -57,13 +54,13 @@ import com.example.poseexercise.viewmodels.CameraXViewModel
 import com.example.poseexercise.viewmodels.HomeViewModel
 import com.example.poseexercise.viewmodels.ResultViewModel
 import com.example.poseexercise.views.activity.MainActivity
+import com.example.poseexercise.views.fragment.preference.PreferenceUtils
 import com.example.poseexercise.views.graphic.GraphicOverlay
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.mlkit.common.MlKitException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.ArrayList
 import java.util.Date
 import java.util.Locale
 import java.util.Timer
@@ -107,13 +104,9 @@ class WorkOutFragment : Fragment() {
     private var runOnce: Boolean = false
     private lateinit var loadingTV: TextView
     private lateinit var loadProgress: ProgressBar
-    private var notCompletePlanList: List<Plan>? = emptyList()
-    private var userWantsToSkip: Boolean = false
-    private lateinit var exerciseGifImageView: ImageView
     private lateinit var completeAllExercise: TextView
     private lateinit var skipButton: Button
     private var isAllWorkoutFinished: Boolean = false
-    private lateinit var exercisePagerAdapter: ExercisePagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -166,27 +159,29 @@ class WorkOutFragment : Fragment() {
         previewView = view.findViewById(R.id.preview_view)
         val gifContainer: FrameLayout = view.findViewById(R.id.gifContainer)
         graphicOverlay = view.findViewById(R.id.graphic_overlay)
-        cameraFlipFAB.visibility = View.GONE
-        startButton.visibility = View.GONE
-        gifContainer.visibility = View.VISIBLE
+        cameraFlipFAB.visibility = View.VISIBLE
+        startButton.visibility = View.VISIBLE
+        gifContainer.visibility = View.GONE
+        skipButton.visibility = View.GONE
 
         val viewPager: ViewPager2 = view.findViewById(R.id.exerciseViewPager)
         val exercisePagerAdapter = ExercisePagerAdapter(exerciseGifs) {
             // Handle skip button click here
             // Transition to the "Start" button
-            startButton.visibility = View.VISIBLE
+            startButton.visibility = View.GONE
             cameraFlipFAB.visibility = View.VISIBLE
             gifContainer.visibility = View.GONE
             viewPager.visibility = View.GONE
             skipButton.visibility = View.GONE
+            cameraFlipFAB.visibility = View.GONE
         }
         viewPager.adapter = exercisePagerAdapter
 
         // start exercise button
         startButton.setOnClickListener {
             // showing loading AI pose detection Model information to user
-            loadingTV.visibility = View.VISIBLE
-            loadProgress.visibility = View.VISIBLE
+            loadingTV.visibility = View.GONE
+            loadProgress.visibility = View.GONE
 
             // Set the screenOn flag to true, preventing the screen from turning off
             screenOn = true
@@ -195,6 +190,7 @@ class WorkOutFragment : Fragment() {
             activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
             cameraFlipFAB.visibility = View.GONE
+            gifContainer.visibility = View.VISIBLE
             buttonCancelExercise.visibility = View.VISIBLE
             buttonCompleteExercise.visibility = View.VISIBLE
             startButton.visibility = View.GONE
@@ -203,8 +199,6 @@ class WorkOutFragment : Fragment() {
             //window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             cameraViewModel.triggerClassification.value = true
         }
-
-
 
         // Cancel the exercise
         buttonCancelExercise.setOnClickListener {
@@ -427,7 +421,7 @@ class WorkOutFragment : Fragment() {
                         currentRepetitionTextView.visibility = View.GONE
                         confidenceTextView.visibility = View.VISIBLE
                         currentExerciseTextView.text = exerciseNameToDisplay(key)
-                        confidenceTextView.text = (value.confidence*100).toInt().toString() + " %"
+                        confidenceTextView.text = getString(R.string.confidence_percentage, (value.confidence * 100).toInt())
 
                     }else if (key in onlyPose && value.confidence < 0.6){
                         confIndicatorView.visibility = View.GONE
