@@ -242,10 +242,35 @@
             app:layout_constraintStart_toStartOf="@+id/preview_view"
             app:layout_constraintTop_toBottomOf="@+id/timerTV" />
 
+
+        <!-- Loading Progress Bar -->
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminateTint="@color/primaryColor"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/loadingStatus"
+            app:layout_constraintTop_toBottomOf="@+id/loadingStatus" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- FrameLayout for black background behind ViewPager -->
+    <FrameLayout
+        android:id="@+id/gifContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:visibility="gone">
+
+        <!-- ViewPager for GIFs -->
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/exerciseViewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
 
         <!-- GifImageView for displaying exercise GIFs -->
         <pl.droidsonroids.gif.GifImageView
@@ -271,19 +296,7 @@
             android:textColor="@color/white"
             app:tint="@color/white"/>
 
-        <!-- Loading Progress Bar -->
-        <ProgressBar
-            android:id="@+id/loadingProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminateTint="@color/primaryColor"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/loadingStatus"
-            app:layout_constraintTop_toBottomOf="@+id/loadingStatus" />
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
 
 </FrameLayout>

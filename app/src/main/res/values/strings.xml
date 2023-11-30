@@ -200,6 +200,7 @@
     <string name="counting_reps_made_simple">Counting Reps Made Simple</string>
     <string name="reps">Reps</string>
     <string name="completedAll">Congratulation!\nYou have completed all the planned exercise for today.</string>
+    <string name="gif_image_view">gif image view</string>
 
 </resources>
 

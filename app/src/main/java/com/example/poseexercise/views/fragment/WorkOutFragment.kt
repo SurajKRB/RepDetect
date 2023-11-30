@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -139,6 +140,7 @@ class WorkOutFragment : Fragment() {
         startButton = view.findViewById(R.id.button_start_exercise)
         buttonCompleteExercise = view.findViewById(R.id.button_complete_exercise)
         buttonCancelExercise = view.findViewById(R.id.button_cancel_exercise)
+        skipButton = view.findViewById(R.id.skipButton)
         timerTextView = view.findViewById(R.id.timerTV)
         timerRecordIcon = view.findViewById(R.id.timerRecIcon)
         confIndicatorView = view.findViewById(R.id.confidenceIndicatorView)
@@ -152,8 +154,6 @@ class WorkOutFragment : Fragment() {
         loadingTV = view.findViewById(R.id.loadingStatus)
         loadProgress = view.findViewById(R.id.loadingProgress)
 
-        skipButton = view.findViewById(R.id.skipButton)
-
         workoutRecyclerView = view.findViewById(R.id.workoutRecycleViewArea)
         workoutRecyclerView.layoutManager = LinearLayoutManager(activity)
 
@@ -164,9 +164,11 @@ class WorkOutFragment : Fragment() {
         // Initialize views
         super.onViewCreated(view, savedInstanceState)
         previewView = view.findViewById(R.id.preview_view)
+        val gifContainer: FrameLayout = view.findViewById(R.id.gifContainer)
         graphicOverlay = view.findViewById(R.id.graphic_overlay)
         cameraFlipFAB.visibility = View.GONE
         startButton.visibility = View.GONE
+        gifContainer.visibility = View.VISIBLE
 
         val viewPager: ViewPager2 = view.findViewById(R.id.exerciseViewPager)
         val exercisePagerAdapter = ExercisePagerAdapter(exerciseGifs) {
@@ -174,26 +176,14 @@ class WorkOutFragment : Fragment() {
             // Transition to the "Start" button
             startButton.visibility = View.VISIBLE
             cameraFlipFAB.visibility = View.VISIBLE
+            gifContainer.visibility = View.GONE
             viewPager.visibility = View.GONE
             skipButton.visibility = View.GONE
         }
         viewPager.adapter = exercisePagerAdapter
 
-
-       /* // Set click listener for the skip button
-        skipButton.setOnClickListener {
-            // Reset the flag before starting the exercise
-            viewPager.visibility = View.GONE
-            skipButton.visibility = View.GONE
-            startButton.visibility = View.VISIBLE
-        }
-*/
-
-
-
         // start exercise button
         startButton.setOnClickListener {
-
             // showing loading AI pose detection Model information to user
             loadingTV.visibility = View.VISIBLE
             loadProgress.visibility = View.VISIBLE
@@ -211,8 +201,6 @@ class WorkOutFragment : Fragment() {
 
             // To disable screen timeout
             //window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-
             cameraViewModel.triggerClassification.value = true
         }
 
