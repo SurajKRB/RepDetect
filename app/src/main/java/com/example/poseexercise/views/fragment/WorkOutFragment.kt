@@ -38,7 +38,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.poseexercise.R
-import com.example.poseexercise.adapters.ExercisePagerAdapter
+import com.example.poseexercise.adapters.ExerciseGifAdapter
 import com.example.poseexercise.adapters.WorkoutAdapter
 import com.example.poseexercise.data.plan.ExerciseLog
 import com.example.poseexercise.data.plan.ExercisePlan
@@ -165,7 +165,7 @@ class WorkOutFragment : Fragment() {
         skipButton.visibility = View.GONE
 
         val viewPager: ViewPager2 = view.findViewById(R.id.exerciseViewPager)
-        val exercisePagerAdapter = ExercisePagerAdapter(exerciseGifs) {
+        val exerciseGifAdapter = ExerciseGifAdapter(exerciseGifs) {
             // Handle skip button click here
             // Transition to the "Start" button
             startButton.visibility = View.GONE
@@ -175,7 +175,7 @@ class WorkOutFragment : Fragment() {
             skipButton.visibility = View.GONE
             cameraFlipFAB.visibility = View.GONE
         }
-        viewPager.adapter = exercisePagerAdapter
+        viewPager.adapter = exerciseGifAdapter
 
         // start exercise button
         startButton.setOnClickListener {
