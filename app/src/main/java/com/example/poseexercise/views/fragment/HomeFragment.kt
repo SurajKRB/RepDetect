@@ -22,6 +22,7 @@ import com.example.poseexercise.data.database.AppRepository
 import com.example.poseexercise.data.plan.Plan
 import com.example.poseexercise.data.results.RecentActivityItem
 import com.example.poseexercise.data.results.WorkoutResult
+import com.example.poseexercise.util.MemoryManagement
 import com.example.poseexercise.util.MyApplication
 import com.example.poseexercise.util.MyUtils
 import com.example.poseexercise.viewmodels.AddPlanViewModel
@@ -37,7 +38,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.min
 
-class HomeFragment : Fragment(), PlanAdapter.ItemListener {
+class HomeFragment : Fragment(), PlanAdapter.ItemListener, MemoryManagement {
     @Suppress("PropertyName")
     val TAG = "RepDetect Home Fragment"
     private lateinit var homeViewModel: HomeViewModel
@@ -240,7 +241,7 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener {
     }
 
     // Delete the plan when user click on delete icon
-    override fun onItemClicked(planId: Int) {
+    override fun onItemClicked(planId: Int, position: Int) {
         val builder: AlertDialog.Builder = AlertDialog.Builder(context)
         // Show a dialog for user to confirm the choice
         builder
@@ -256,6 +257,15 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener {
                     val result2 = withContext(Dispatchers.IO) { homeViewModel.getNotCompletePlans(today) }
                     updateResultFromDatabase(result1, result2)
                 }
+                Log.d(TAG,"Delete plan $planId" )
+                Log.d(TAG, "Adapter position is $position")
+                notCompletePlanList?.removeAt(position)
+                adapter.notifyItemRemoved(position)
+                adapter.notifyDataSetChanged()
+                if (notCompletePlanList?.isEmpty() == true) {
+                    noPlanTV.text = getString(R.string.there_is_no_plan_set_at_the_moment)
+                    recyclerView.visibility = View.GONE
+                }
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel") { dialog, _ ->
@@ -264,5 +274,16 @@ class HomeFragment : Fragment(), PlanAdapter.ItemListener {
             }
         val dialog: AlertDialog = builder.create()
         dialog.show()
+    }
+
+    override fun clearMemory() {
+        planList = null
+        notCompletePlanList = null
+        workoutResults = null
+    }
+
+    override fun onDestroy() {
+        clearMemory()
+        super.onDestroy()
     }
 }
